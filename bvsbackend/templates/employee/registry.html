@@ -1,0 +1,25 @@
+{% extends "bvsbackend/base.html" %}
+{% block title %}Assigned beneficiary registry | CivicBridge{% endblock %}
+{% block breadcrumb %}Field workspace / Beneficiary registry{% endblock %}
+{% block content %}
+  <section class="page-head">
+    <div><div class="eyebrow">Assigned records only</div><h1>Beneficiary registry</h1><p class="subtitle">A shared community view of households assigned to you. Independent validators submit their own attestations.</p></div>
+    <div class="actions"><a class="button button-primary" href="{% url 'employee_dashboard' %}">My assignments</a></div>
+  </section>
+  <div class="notice"><strong>Community verification:</strong><span>Barangay officials, purok leaders, volunteers, and residents may contribute local knowledge through an assigned review. Your decision is recorded separately in the audit trail; other validators' decisions remain private until you submit yours.</span></div>
+  <section class="panel registry-tools" aria-label="Search your assigned registry">
+    <form method="get" class="registry-filter-form">
+      <label class="registry-search-label" for="employeeRegistrySearch">Search assigned households</label>
+      <input id="employeeRegistrySearch" class="registry-search" type="search" name="q" value="{{ query }}" placeholder="Name, ID, barangay, purok, or program">
+      <label class="registry-status-label" for="employeeRegistryDecision">My validation</label>
+      <select id="employeeRegistryDecision" name="decision"><option value="">All my validations</option>{% for value, label in decision_choices %}<option value="{{ value }}" {% if selected_decision == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+      <button class="button button-primary" type="submit">Search</button>
+      {% if query or selected_decision %}<a class="button" href="{% url 'employee_registry' %}">Clear</a>{% endif %}
+    </form>
+    <p class="registry-result-count">{{ result_count }} assigned record{{ result_count|pluralize }} found</p>
+  </section>
+  <section class="panel" aria-label="Assigned beneficiaries"><div class="table-scroll"><table class="data-table"><thead><tr><th>Beneficiary</th><th>Community</th><th>Household</th><th>Program</th><th>My validation</th><th></th></tr></thead><tbody>
+    {% for assignment in assignments %}<tr><td>{{ assignment.beneficiary.full_name }}<br><span class="secondary-id">{{ assignment.beneficiary.beneficiary_id }}</span></td><td>{{ assignment.beneficiary.purok }}, {{ assignment.beneficiary.barangay }}</td><td>{{ assignment.beneficiary.household_size }} people<br><span class="secondary-note">{{ assignment.beneficiary.residency_months }} months residency</span></td><td>{{ assignment.beneficiary.program|default:"Not assigned" }}</td><td><span class="status {{ assignment.decision }}">{{ assignment.get_decision_display }}</span></td><td><a class="button" href="{% url 'employee_dashboard' %}#assignment-{{ assignment.id }}">Review</a></td></tr>
+    {% empty %}<tr><td colspan="6"><div class="empty">No assigned beneficiary records match this view. Ask your coordinator to assign households to you.</div></td></tr>{% endfor %}
+  </tbody></table></div></section>
+{% endblock %}
