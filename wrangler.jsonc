@@ -2,7 +2,7 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "community-based-beneficiary-validation",
   "main": "src/index.py",
-  "compatibility_date": "2026-11-13",
+  "compatibility_date": "2026-11-14",
   "compatibility_flags": [
     "python_workers"
   ]
