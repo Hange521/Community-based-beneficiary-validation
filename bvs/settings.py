@@ -107,22 +107,20 @@ WSGI_APPLICATION = 'bvs.wsgi.application'
 
 DB_SSL_CA = os.environ.get("DB_SSL_CA")
 
-# Use SQLite automatically for local development. Configure DB_NAME to enable
-# MySQL, which is useful for hosted/production deployments.
 if os.environ.get("DB_NAME"):
     DATABASES = {
         "default": {
-            "ENGINE": os.environ.get("DB_ENGINE", "django.db.backends.mysql"),
+            "ENGINE": os.environ.get(
+                "DB_ENGINE",
+                "django.db.backends.mysql"
+            ),
             "NAME": os.environ.get("DB_NAME"),
             "USER": os.environ.get("DB_USER", ""),
             "PASSWORD": os.environ.get("DB_PASSWORD", ""),
             "HOST": os.environ.get("DB_HOST", ""),
             "PORT": os.environ.get("DB_PORT", ""),
             "OPTIONS": {
-                **(
-                    {"ssl": {"ca": DB_SSL_CA}}
-                    if DB_SSL_CA else {}
-                ),
+                **({"ssl": {"ca": DB_SSL_CA}} if DB_SSL_CA else {}),
             },
         }
     }
