@@ -437,7 +437,10 @@ def employee_delete(request, user_id):
 @role_required("admin")
 def assign_validators(request, beneficiary_id):
     beneficiary = get_object_or_404(Beneficiary, pk=beneficiary_id)
-    form = AssignmentForm(request.POST if request.method == "POST" else None)
+    form = AssignmentForm(
+        request.POST if request.method == "POST" else None,
+        initial={"validators": beneficiary.assignments.values_list("validator_id", flat=True)},
+    )
     if request.method == "POST" and form.is_valid():
         selected = form.cleaned_data["validators"]
         selected_ids = set(selected.values_list("id", flat=True))

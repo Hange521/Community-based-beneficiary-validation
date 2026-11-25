@@ -429,6 +429,12 @@ class ValidationWorkflowTests(TestCase):
 				decision=ValidatorAssignment.Decision.CONFIRMED,
 			)
 		self.client.force_login(self.admin)
+		assignment_page = self.client.get(reverse("assign_validators", args=[beneficiary.pk]))
+		self.assertEqual(assignment_page.status_code, 200)
+		self.assertEqual(
+			set(assignment_page.context["form"]["validators"].value()),
+			{validator.pk for validator in self.validators[:2]},
+		)
 
 		response = self.client.post(
 			reverse("assign_validators", args=[beneficiary.pk]),

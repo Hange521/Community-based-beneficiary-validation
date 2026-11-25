@@ -18,6 +18,5 @@
   </div>
   {% if form.photo %}<section class="registration-location" aria-labelledby="registrationLocationTitle"><h2 id="registrationLocationTitle">Optional registration map pin</h2><p>Choose an approximate community location on the map, or use your current location. A pin is saved only with recorded consent.</p><div id="registrationLocationMap" class="registration-location-map" role="region" aria-label="Choose an optional registration location on the map"></div><button class="button registration-location-button" type="button">Use current location</button><span class="help" id="registrationLocationStatus" aria-live="polite">No map pin selected.</span></section>{% endif %}
   <div class="form-actions"><a class="button" href="{% url 'dashboard' %}">Cancel</a><button class="button button-primary" type="submit">{{ submit_label }}</button></div>{% if is_assignment_form %}<p class="help assignment-save-status" aria-live="polite"></p>{% endif %}</form></section>
-  {% if is_assignment_form %}<script src="{% static 'js/assignment.js' %}" defer></script>{% endif %}
   {% if form.photo %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script><script src="{% static 'js/beneficiary-location.js' %}" defer></script>{% endif %}
 {% endblock %}

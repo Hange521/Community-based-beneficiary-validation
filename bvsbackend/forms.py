@@ -166,7 +166,7 @@ class AssignmentForm(forms.Form):
         queryset=User.objects.none(),
         required=False,
         widget=forms.CheckboxSelectMultiple,
-        help_text="Up to three validators may be assigned to each beneficiary.",
+        help_text="Up to three validators may be assigned. Uncheck a validator to remove the assignment; leave all unchecked to clear assignments.",
     )
 
     def __init__(self, *args, **kwargs):
