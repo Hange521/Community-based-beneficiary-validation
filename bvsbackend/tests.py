@@ -412,6 +412,49 @@ class ValidationWorkflowTests(TestCase):
 		self.assertTrue(assignment.residency_confirmed)
 		self.assertTrue(assignment.household_details_reviewed)
 
+	def test_assignment_update_removes_unselected_validators(self):
+		beneficiary = Beneficiary.objects.create(
+			full_name="Reassigned Household",
+			barangay="San Isidro",
+			purok="Purok 2",
+			decision=Beneficiary.Decision.APPROVED,
+			consent_recorded=True,
+			created_by=self.admin,
+		)
+		for validator in self.validators[:2]:
+			ValidatorAssignment.objects.create(
+				beneficiary=beneficiary,
+				validator=validator,
+				assigned_by=self.admin,
+				decision=ValidatorAssignment.Decision.CONFIRMED,
+			)
+		self.client.force_login(self.admin)
+
+		response = self.client.post(
+			reverse("assign_validators", args=[beneficiary.pk]),
+			{"validators": [self.validators[2].pk]},
+			HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+		)
+
+		self.assertEqual(response.status_code, 200)
+		self.assertTrue(response.json()["ok"])
+		self.assertQuerySetEqual(
+			beneficiary.assignments.order_by("validator_id").values_list("validator_id", flat=True),
+			[self.validators[2].pk],
+		)
+		beneficiary.refresh_from_db()
+		self.assertEqual(beneficiary.decision, Beneficiary.Decision.PENDING)
+		self.assertEqual(AuditEvent.objects.filter(action="validator_unassigned").count(), 2)
+
+		response = self.client.post(
+			reverse("assign_validators", args=[beneficiary.pk]),
+			{"validators": []},
+			HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+		)
+		self.assertEqual(response.status_code, 200)
+		self.assertFalse(beneficiary.assignments.exists())
+		self.assertEqual(AuditEvent.objects.filter(action="validator_unassigned").count(), 3)
+
 	def test_confirmation_requires_method_and_all_three_checks(self):
 		beneficiary = Beneficiary.objects.create(
 			full_name="Incomplete Check Resident",

@@ -164,6 +164,7 @@ class EmployeeUpdateForm(forms.ModelForm):
 class AssignmentForm(forms.Form):
     validators = forms.ModelMultipleChoiceField(
         queryset=User.objects.none(),
+        required=False,
         widget=forms.CheckboxSelectMultiple,
         help_text="Up to three validators may be assigned to each beneficiary.",
     )

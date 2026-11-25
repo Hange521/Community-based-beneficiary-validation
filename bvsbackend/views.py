@@ -437,14 +437,15 @@ def employee_delete(request, user_id):
 @role_required("admin")
 def assign_validators(request, beneficiary_id):
     beneficiary = get_object_or_404(Beneficiary, pk=beneficiary_id)
-    form = AssignmentForm(request.POST or None)
+    form = AssignmentForm(request.POST if request.method == "POST" else None)
     if request.method == "POST" and form.is_valid():
         selected = form.cleaned_data["validators"]
-        existing_ids = set(beneficiary.assignments.values_list("validator_id", flat=True))
-        all_ids = existing_ids | set(selected.values_list("id", flat=True))
-        if len(all_ids) > 3:
-            form.add_error("validators", "A beneficiary may have no more than three distinct validators.")
-        else:
+        selected_ids = set(selected.values_list("id", flat=True))
+        with transaction.atomic():
+            removed = beneficiary.assignments.exclude(validator_id__in=selected_ids).select_related("validator")
+            for assignment in removed:
+                audit(request.user, "validator_unassigned", "beneficiary", beneficiary.beneficiary_id, f"The validation assignment for {assignment.validator.get_username()} was removed.")
+            removed.delete()
             for validator in selected:
                 assignment, created = ValidatorAssignment.objects.get_or_create(
                     beneficiary=beneficiary,
@@ -453,13 +454,31 @@ def assign_validators(request, beneficiary_id):
                 )
                 if created:
                     audit(request.user, "validator_assigned", "beneficiary", beneficiary.beneficiary_id, f"A validation assignment was created for {validator.get_username()}.")
-            messages.success(request, "Validator assignments were updated.")
-            return redirect("dashboard")
+
+            summary = beneficiary.validation_summary()
+            if summary == "consensus_confirmed":
+                if beneficiary.eligibility_issues() or beneficiary.duplicate_candidates().exists():
+                    beneficiary.decision = Beneficiary.Decision.NEEDS_REVIEW
+                else:
+                    beneficiary.decision = Beneficiary.Decision.APPROVED
+            elif summary == "committee_review":
+                beneficiary.decision = Beneficiary.Decision.NEEDS_REVIEW
+            elif beneficiary.decision != Beneficiary.Decision.REJECTED:
+                beneficiary.decision = Beneficiary.Decision.PENDING
+            beneficiary.save(update_fields=["decision", "updated_at"])
+
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": True, "message": "Validator assignments were updated."})
+        messages.success(request, "Validator assignments were updated.")
+        return redirect("dashboard")
+    if request.method == "POST" and request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JsonResponse({"ok": False, "errors": form.errors.get_json_data()}, status=400)
     return render(request, "admin/form.html", {
         "form": form,
         "title": f"Assign validators · {beneficiary.beneficiary_id}",
         "submit_label": "Save assignments",
         "beneficiary": beneficiary,
+        "is_assignment_form": True,
     })
 
 
