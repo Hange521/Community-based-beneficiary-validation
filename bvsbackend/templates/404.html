@@ -1,0 +1,37 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page not found | CivicBridge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <style>
+    .not-found-page { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at top right, #edf5ef 0, #f6f7f3 40%); }
+    .not-found-card { width: min(520px, 100%); padding: 52px 44px; text-align: center; border: 1px solid var(--line); border-radius: 22px; background: var(--paper); box-shadow: 0 22px 60px rgb(25 69 53 / 10%); }
+    .not-found-code { display: inline-grid; width: 82px; height: 82px; place-items: center; border-radius: 50%; background: var(--coral-pale); color: var(--coral); font-family: "Fraunces", Georgia, serif; font-size: 38px; font-weight: 600; }
+    .not-found-card h1 { margin: 24px 0 10px; font-family: "Fraunces", Georgia, serif; font-size: clamp(28px, 7vw, 42px); }
+    .not-found-card p { margin: 0 auto 28px; max-width: 390px; color: var(--muted); line-height: 1.65; }
+    .not-found-actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .not-found-button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 18px; border-radius: 10px; background: var(--green); color: #fff; font-weight: 700; text-decoration: none; }
+    .not-found-button.secondary { border: 1px solid var(--line); background: #fff; color: var(--green); }
+  </style>
+</head>
+<body>
+  <main class="not-found-page">
+    <section class="not-found-card" aria-labelledby="not-found-title">
+      <div class="not-found-code">404</div>
+      <h1 id="not-found-title">Page not found</h1>
+      <p>The address may be incorrect, or the page may have moved. Return to your workspace or go back to the previous page.</p>
+      <div class="not-found-actions">
+        {% url destination as destination_url %}
+        <a class="not-found-button" href="{{ destination_url }}">Go to workspace</a>
+        <a class="not-found-button secondary" href="javascript:history.back()">Go back</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

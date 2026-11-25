@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.urls import include, path, reverse_lazy
 from django.views.generic import RedirectView
 
+handler404 = "bvsbackend.views.page_not_found"
+
 urlpatterns = [
     path("admin/", RedirectView.as_view(url=reverse_lazy("dashboard"), permanent=False), name="admin-home"),
     path("django-admin/", admin.site.urls),

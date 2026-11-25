@@ -83,6 +83,14 @@ def login_view(request):
         if user is not None and user.is_active:
             if user.is_staff or user.is_superuser or user.groups.filter(name=VALIDATOR_GROUP).exists():
                 auth_login(request, user)
+                role = "Administrator" if user.is_staff or user.is_superuser else "Employee validator"
+                audit(
+                    user,
+                    "user_login",
+                    "account",
+                    user.username,
+                    f"{role} signed in successfully.",
+                )
                 return redirect("dashboard" if user.is_staff or user.is_superuser else "employee_dashboard")
         messages.error(request, "Check your sign-in details or ask an administrator to activate your account.")
     return render(request, "login.html", {"form": form})
@@ -90,6 +98,15 @@ def login_view(request):
 
 @require_POST
 def logout_view(request):
+    if request.user.is_authenticated:
+        role = "Administrator" if request.user.is_staff or request.user.is_superuser else "Employee validator"
+        audit(
+            request.user,
+            "user_logout",
+            "account",
+            request.user.username,
+            f"{role} signed out.",
+        )
     auth_logout(request)
     messages.info(request, "You have been signed out.")
     return redirect("login")
@@ -599,3 +616,10 @@ def export_registry(request):
         ])
     audit(request.user, "registry_exported", "registry", "all", "The administrator exported the beneficiary registry.")
     return response
+
+
+def page_not_found(request, exception):
+    destination = "login"
+    if request.user.is_authenticated:
+        destination = "dashboard" if request.user.is_staff or request.user.is_superuser else "employee_dashboard"
+    return render(request, "404.html", {"destination": destination}, status=404)
