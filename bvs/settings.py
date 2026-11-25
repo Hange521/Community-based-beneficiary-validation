@@ -34,11 +34,11 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    'community-based-beneficiary-validation-1.onrender.com',
+    'community-based-beneficiary-validation.onrender.com',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://community-based-beneficiary-validation-1.onrender.com',
+    'https://community-based-beneficiary-validation.onrender.com',
     'http://127.0.0.1:8000',
     'http://localhost:8000',
 ]
