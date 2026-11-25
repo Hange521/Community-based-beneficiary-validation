@@ -26,4 +26,5 @@ urlpatterns = [
     path("employee/", views.employee_dashboard, name="employee_dashboard"),
     path("employee/registry/", views.employee_registry, name="employee_registry"),
     path("employee/assignments/<int:assignment_id>/validate/", views.submit_validation, name="submit_validation"),
+    path("<path:unmatched_path>", views.unmatched_route),
 ]

@@ -645,3 +645,7 @@ def page_not_found(request, exception):
     if request.user.is_authenticated:
         destination = "dashboard" if request.user.is_staff or request.user.is_superuser else "employee_dashboard"
     return render(request, "404.html", {"destination": destination}, status=404)
+
+
+def unmatched_route(request, unmatched_path):
+    return page_not_found(request, None)
