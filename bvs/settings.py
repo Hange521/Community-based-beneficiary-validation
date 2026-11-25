@@ -34,11 +34,11 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    'relevance-qualified-according-doubt.trycloudflare.com',
+    'community-based-beneficiary-validation-1.onrender.com',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://relevance-qualified-according-doubt.trycloudflare.com',
+    'https://community-based-beneficiary-validation-1.onrender.com',
     'http://127.0.0.1:8000',
     'http://localhost:8000',
 ]
