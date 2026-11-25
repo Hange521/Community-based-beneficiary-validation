@@ -1,0 +1,39 @@
+{% extends "bvsbackend/base.html" %}
+{% load static %}
+{% block extra_head %}{% if beneficiary.consent_recorded %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">{% endif %}{% endblock %}
+{% block title %}{{ beneficiary.beneficiary_id }} | CivicBridge{% endblock %}
+{% block breadcrumb %}Administration / Beneficiary registry / {{ beneficiary.beneficiary_id }}{% endblock %}
+{% block content %}
+  <section class="page-head">
+    <div><div class="eyebrow">Registered household</div><h1>{{ beneficiary.full_name }}</h1><p class="subtitle">{{ beneficiary.beneficiary_id }} · Registered {{ beneficiary.created_at|date:"M j, Y" }}</p></div>
+    <div class="actions"><a class="button" href="{% url 'registry' %}">Back to registry</a><a class="button" href="{% url 'assign_validators' beneficiary.id %}">Assign validators</a><a class="button button-primary" href="{% url 'beneficiary_resolve' beneficiary.id %}">Resolve record</a></div>
+  </section>
+  <section class="panel record-panel" aria-labelledby="record-details-title">
+    <div class="panel-head"><div><h2 id="record-details-title">Registration information</h2><p>Information saved with this beneficiary record</p></div><span class="status {{ beneficiary.decision }}">{{ beneficiary.get_decision_display }}</span></div>
+    {% if beneficiary.photo %}<div class="record-photo-wrap"><img class="record-photo" src="{% url 'beneficiary_photo' beneficiary.id %}" alt="Photo attached to {{ beneficiary.beneficiary_id }}"></div>{% endif %}
+    <dl class="record-grid">
+      <div><dt>Barangay</dt><dd>{{ beneficiary.barangay }}</dd></div>
+      <div><dt>Purok</dt><dd>{{ beneficiary.purok }}</dd></div>
+      <div><dt>Address note</dt><dd>{{ beneficiary.address_note|default:"Not recorded" }}</dd></div>
+      <div><dt>Registration map pin</dt><dd>{% if beneficiary.registration_latitude != None and beneficiary.registration_longitude != None %}<a href="https://www.openstreetmap.org/?mlat={{ beneficiary.registration_latitude }}&amp;mlon={{ beneficiary.registration_longitude }}#map=16/{{ beneficiary.registration_latitude }}/{{ beneficiary.registration_longitude }}" target="_blank" rel="noopener">Open registration map</a>{% else %}Not selected{% endif %}</dd></div>
+      <div><dt>Program</dt><dd>{{ beneficiary.program|default:"Unassigned" }}</dd></div>
+      <div><dt>Household size</dt><dd>{{ beneficiary.household_size }} people</dd></div>
+      <div><dt>Monthly household income</dt><dd>{% if beneficiary.monthly_household_income != None %}{{ beneficiary.monthly_household_income }}{% else %}Not recorded{% endif %}</dd></div>
+      <div><dt>Residency</dt><dd>{{ beneficiary.residency_months }} months</dd></div>
+      <div><dt>Vulnerability</dt><dd>{{ beneficiary.get_vulnerability_display }}</dd></div>
+      <div><dt>Birth year</dt><dd>{{ beneficiary.birth_year|default:"Not recorded" }}</dd></div>
+      <div><dt>Contact number</dt><dd>{{ beneficiary.contact_number|default:"Not recorded" }}</dd></div>
+      <div><dt>Consent recorded</dt><dd>{{ beneficiary.consent_recorded|yesno:"Yes,No" }}</dd></div>
+      <div><dt>Registered by</dt><dd>{{ beneficiary.created_by.get_full_name|default:beneficiary.created_by.username|default:"Not recorded" }}</dd></div>
+    </dl>
+  </section>
+  {% if beneficiary.consent_recorded %}<details class="panel registration-location record-location"><summary>Set or update registration map pin</summary><p>Choose an approximate location on the map or use your current location. This pin is visible to administrators and included in the registry map.</p><div id="registrationLocationMap" class="registration-location-map" role="region" aria-label="Choose an optional registration location on the map"></div><button class="button registration-location-button" type="button">Use current location</button><span class="help" id="registrationLocationStatus" aria-live="polite">{% if beneficiary.registration_latitude != None %}Current registration pin loaded.{% else %}No map pin selected.{% endif %}</span><form method="post" action="{% url 'beneficiary_location_update' beneficiary.id %}">{% csrf_token %}{{ location_form.registration_latitude }}{{ location_form.registration_longitude }}<button class="button button-primary" type="submit">Save map pin</button></form></details>{% else %}<p class="notice">A registration map pin can be saved after consent is recorded.</p>{% endif %}
+  <section class="panel">
+    <div class="panel-head"><div><h2>Validator activity</h2><p>Review outcomes and notes attached to this record</p></div></div>
+    <div class="table-scroll"><table class="data-table"><thead><tr><th>Validator</th><th>Outcome</th><th>Method</th><th>Evidence checks</th><th>Note</th><th>Visit location</th></tr></thead><tbody>
+      {% for assignment in assignments %}<tr><td>{{ assignment.validator.get_full_name|default:assignment.validator.username }}</td><td><span class="status {{ assignment.decision }}">{{ assignment.get_decision_display }}</span></td><td>{{ assignment.get_verification_method_display|default:"Not recorded" }}</td><td>{{ assignment.identity_checked|yesno:"Identity checked,Identity not checked" }} · {{ assignment.residency_confirmed|yesno:"Residency checked,Residency not checked" }} · {{ assignment.household_details_reviewed|yesno:"Household checked,Household not checked" }}</td><td>{{ assignment.note|default:"No note" }}</td><td>{% if assignment.latitude != None and assignment.longitude != None %}<a href="https://www.openstreetmap.org/?mlat={{ assignment.latitude }}&amp;mlon={{ assignment.longitude }}#map=16/{{ assignment.latitude }}/{{ assignment.longitude }}" target="_blank" rel="noopener">Open visit map</a>{% else %}Not shared{% endif %}</td></tr>
+      {% empty %}<tr><td colspan="6"><div class="empty">No validators are assigned to this record.</div></td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+  {% if beneficiary.consent_recorded %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script><script src="{% static 'js/beneficiary-location.js' %}" defer></script>{% endif %}
+{% endblock %}

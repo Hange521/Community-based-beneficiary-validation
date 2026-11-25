@@ -1,0 +1,13 @@
+[project]
+name = "community-based-beneficiary-validation"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "Django>=5.2,<5.3"
+]
+
+[dependency-groups]
+dev = [
+    "workers-py",
+    "workers-runtime-sdk"
+]

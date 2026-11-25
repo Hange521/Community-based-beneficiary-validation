@@ -1,0 +1,74 @@
+{% extends "bvsbackend/base.html" %}
+{% load static %}
+{% block extra_head %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">{% endblock %}
+{% block title %}Beneficiary registry | CivicBridge{% endblock %}
+{% block breadcrumb %}Administration / Beneficiary registry{% endblock %}
+{% block content %}
+  <section class="page-head">
+    <div>
+      <div class="eyebrow">Community-based beneficiary validation</div>
+      <h1>Beneficiary registry</h1>
+      <p class="subtitle">Search household records, check validation status, and open committee actions.</p>
+    </div>
+    <div class="actions">
+      <a class="button" href="{% url 'import_registry' %}">Import draft CSV</a>
+      <a class="button button-primary" href="{% url 'beneficiary_create' %}">Register beneficiary</a>
+    </div>
+  </section>
+
+  <section class="panel registry-tools" aria-label="Search and filter registry">
+    <form method="get" class="registry-filter-form">
+      <label class="registry-search-label" for="registrySearch">Search registry</label>
+      <input id="registrySearch" class="registry-search" type="search" name="q" value="{{ query }}" placeholder="Name, ID, barangay, purok, or program">
+      <label class="registry-status-label" for="registryDecision">Decision</label>
+      <select id="registryDecision" name="decision">
+        <option value="">All decisions</option>
+        {% for value, label in decision_choices %}<option value="{{ value }}" {% if selected_decision == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+      <button class="button button-primary" type="submit">Search</button>
+      {% if query or selected_decision %}<a class="button" href="{% url 'registry' %}">Clear</a>{% endif %}
+    </form>
+    <p class="registry-result-count">{{ result_count }} record{{ result_count|pluralize }} found</p>
+  </section>
+
+  <section class="panel registry-map-panel" aria-labelledby="registryMapTitle">
+    <div class="panel-head"><div><h2 id="registryMapTitle">Registration map</h2><p>{{ map_point_total }} selected location{{ map_point_total|pluralize }} in the current results{% if map_point_total > map_point_count %}; showing the newest {{ map_point_count }}{% endif %}</p></div></div>
+    {% if map_points %}<div id="registryMap" class="registry-map" role="region" aria-label="Map of locations selected during registration"></div>
+    <p class="map-caption">Pins show the optional location selected during registration. Older records without a map pin still appear in the registry below. Map tiles are provided by OpenStreetMap.</p>
+    {{ map_points|json_script:"registryMapData" }}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+    <script src="{% static 'js/registry-map.js' %}" defer></script>
+    {% else %}<div class="empty">No registration map pins have been added to these results yet.</div>{% endif %}
+  </section>
+
+  <section class="panel" aria-label="Beneficiary records">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th>Beneficiary</th><th>Community</th><th>Program</th><th>Validation</th><th>Decision</th><th>Manage</th></tr></thead>
+        <tbody>
+          {% for beneficiary in beneficiaries %}
+            <tr>
+              <td><a href="{% url 'beneficiary_detail' beneficiary.id %}">{{ beneficiary.full_name }}</a><br><span class="secondary-id">{{ beneficiary.beneficiary_id }}</span></td>
+              <td>{{ beneficiary.purok }}, {{ beneficiary.barangay }}</td>
+              <td>{{ beneficiary.program|default:"Unassigned" }}</td>
+              <td>{{ beneficiary.assignments.count }} validator{{ beneficiary.assignments.count|pluralize }}<br><span class="secondary-note">{{ beneficiary.validation_summary|cut:"_"|title }}</span></td>
+              <td><span class="status {{ beneficiary.decision }}">{{ beneficiary.get_decision_display }}</span></td>
+              <td class="actions-cell"><a class="button" href="{% url 'assign_validators' beneficiary.id %}">Assign</a><a class="button" href="{% url 'beneficiary_resolve' beneficiary.id %}">Resolve</a></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6"><div class="empty empty-with-actions"><span>{% if query or selected_decision %}No records match those search filters.{% else %}The beneficiary registry is empty. Register a household or import a consented draft list to get started.{% endif %}</span><span class="empty-actions"><a class="button button-primary" href="{% url 'beneficiary_create' %}">Register beneficiary</a><a class="button" href="{% url 'import_registry' %}">Import CSV</a></span></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if page.paginator.num_pages > 1 %}
+      <nav class="registry-pagination" aria-label="Registry pages">
+        <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+        <span class="pagination-actions">
+          {% if page.has_previous %}<a class="button" href="?q={{ query|urlencode }}&amp;decision={{ selected_decision|urlencode }}&amp;page={{ page.previous_page_number }}">Previous</a>{% endif %}
+          {% if page.has_next %}<a class="button" href="?q={{ query|urlencode }}&amp;decision={{ selected_decision|urlencode }}&amp;page={{ page.next_page_number }}">Next</a>{% endif %}
+        </span>
+      </nav>
+    {% endif %}
+  </section>
+{% endblock %}
